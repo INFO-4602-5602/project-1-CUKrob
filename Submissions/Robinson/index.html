@@ -1,0 +1,282 @@
+<html>
+<head>
+<title>Project 1</title>
+<link rel="stylesheet" type="text/css" href="project1.css"></link>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<!--Put your D3 import statement between these two lines-->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+<!--Put your D3 import statement between these two lines-->
+</head>
+
+<body>
+	<div id="partOne">
+        <h1>Part One: </h1>
+	</div>
+
+    <div id="partTwo">
+        <h1>Part Two: </h1>
+        <div id="scatterplot">
+            <p id="scatterLabel"></p>
+        </div>
+	</div>
+
+    <div id="partThree">
+        <h1>Part Three &amp; Four: </h1>
+        <div id="linegraph">
+        </div>
+	</div>
+
+    <div id="partFive">
+        <h1>Part Five: </h1>
+        <div id="scatterplotSet">
+        </div>
+	</div>
+
+    <script type="text/javascript">
+        // Put your part one code here ***********************
+        // with help from https://groups.google.com/forum/#!msg/d3-js/3Y9VHkOOdCM/YnmOPopWUxQJ
+        d3.csv('data/anscombe_I.csv', function(error, data1){
+            d3.csv('data/anscombe_II.csv', function(error, data2){
+                d3.csv('data/anscombe_III.csv', function(error, data3){
+                    d3.csv('data/anscombe_IV.csv', function(error, data4){
+                        var anscombe1 = data1;
+                        var anscombe2 = data2;
+                        var anscombe3 = data3;
+                        var anscombe4 = data4;         
+ 
+        // Leave this to test your data uploading. All data uploading should be above this line
+        function checkDataset(dataset) {
+            if (dataset.length == 11)
+                $("#partOne").append("<p>data loaded correctly</p>");
+            else
+                $("#partOne").append("<p>data loaded incorrectly. Try using the debugger to help you find the bug!</p>");
+        };
+            
+        // check the data using function above    
+        checkDataset(anscombe1);
+        checkDataset(anscombe2);
+        checkDataset(anscombe3);
+        checkDataset(anscombe4);
+    
+        }); });});});
+
+        // Put your part two code here ***********************
+        
+        // First, we will create some constants to define non-data-related parts of the visualization
+        var w = 700; // Width of our visualization
+        var h = 500; // Height of our visualization
+        var xOffset = 40; // Space for x-axis labels
+        var yOffset = 100; // Space for y-axis labels
+        var margin = 10; // Margin around visualization
+        var vals = ['x', 'y']; // x and y 
+        var xVal = vals[0]; // Value to plot on x-axis
+        var yVal = vals[1]; // Value to plot on y-axis
+
+
+        // set the dimensions and margins of the graph
+        var margin = {top:20, right:20, bottom: 30, left: 50};
+        var width = 960-margin.left - margin.right;
+        var height = 500-margin.top - margin.bottom;
+
+        // set the ranges
+        // Origin is in the upper left corner, not bottom left.
+        var x = d3.scaleLinear().range([0, width]);
+        var y = d3.scaleLinear().range([height, 0]);
+       
+        // append the svg obgect to the body of the page
+        // appends a 'group' element to 'svg'
+        // moves the 'group' element to the top left margin
+        var svg1  = d3.select("#partTwo").append("svg")
+             .attr("width", width + margin.left + margin.right)
+             .attr("height", height + margin.top + margin.bottom)
+             .append("g")
+             .attr("transform", "translate("+margin.left +
+             "," + margin.top +")");
+        // Scale the range of the data
+        // Extent automatically pulls out min/max values from data. Have to identify attribute to get min/max value of.
+        // xVal defined earlier
+        
+        d3.csv('data/anscombe_II.csv', function(error, data2){
+            data2.forEach(function(data2){
+                data2.x=+data2.x;
+                data2.y=+data2.y
+            })
+
+        x.domain(d3.extent(data2, function(d) {return d[xVal];}));
+        // Starting at 0. visualizations that have a y axis that don't start at zero can be quite misleading. Max identifies largest value.
+        y.domain([0, d3.max(data2, function(d) {return d[yVal];})]);
+      
+        svg1.selectAll("circle")
+             .data(data2)
+             .enter()
+             .append("circle")
+             .attr("r", 5)
+             .attr("cx", function(d) {return x(d[xVal]);})
+             .attr("cy", function(d) {return y(d[yVal]);})
+             .attr("fill","lightblue")
+             .transition()
+             .ease(d3.easeBounce)
+             .duration(4000)
+             .attr("r", function(d) {return d["x"];});
+        
+
+   
+        // Add the X Axis - version 4 notation for axis
+        svg1.append("g")
+                .attr("transform", "translate(0, "+ height +")")
+                .call(d3.axisBottom(x));
+        // Add the Y Axis - version 4 notation for axis
+        svg1.append("g")
+             .call(d3.axisLeft(y));
+        // add the text labels
+        // class attribute says look in css style sheet and look for .label
+        var xLabel = svg1.append("text")
+                    .attr("class", "label")
+                    .text(xVal)
+                    .attr("x", width - 20)
+                    .attr("y", height - 10)
+
+        var xLabel = svg1.append("text")
+                   .attr("class", "label")
+                    .text(yVal)
+                    .attr("y",  - 10)
+                    .attr("transform","rotate(90)")
+                    .style("text-anchor", "start");
+        });
+
+        // A function to retrieve the next value in the vals list
+        function getNextVal(val) {
+	       return vals[(vals.indexOf(val) + 1) % vals.length];
+        };
+
+        // A function to change what values we plot on the x-axis
+        function setXval(val) {
+           // Update xVal
+           xVal = val;
+           // Update the axis
+           xScale.domain([d3.min(anscombe2, function(d) { return parseFloat(d[xVal]); })-1,
+                       d3.max(anscombe2, function(d) { return parseFloat(d[xVal]); })+1])
+           xAxis.scale(xScale);
+           xAxisG.call(xAxis);
+           xLabel.text(xVal);
+           // Update the points
+
+        };
+
+        // A function to change what values we plot on the y-axis
+        function setYval(val) {
+            // Update yVal
+            yVal = val;
+            // Update the axis
+            yScale.domain([d3.min(anscombe2, function(d) { return parseFloat(d[yVal]); })-1,
+                           d3.max(anscombe2, function(d) { return parseFloat(d[yVal]); })+1])
+            yAxis.scale(yScale);
+            yAxisG.call(yAxis);
+            yLabel.text(yVal);
+            // Update the points
+
+        };
+
+        // Put your part three & four code here ***********************
+        // The line graph
+        // get data (I looked at D3 tutorials on Lynda.com to create the following code.)
+        d3.csv('data/anscombe_II.csv')
+            .row(function(d){return {x:Number(d.x), y:Number(d.y)};})
+            .get(function(error,data){
+            var height = 300;
+            var width = 500;
+    
+            // need to sort the data, otherwise a mess
+            // sorting function adapted from https://www.w3schools.com/js/js_array_sort.asp
+    
+            data.sort(function (a,b) {
+                return a.x -b.x;
+            });
+            
+            // get max/min values for x axis  & max value for y axis
+            var maxX = d3.max(data,function(d){return d.x;});
+            var minX = d3.min(data,function(d){return d.x;});
+            var maxY = d3.max(data,function(d){return d.y;});
+            
+            // using the max and min values, create scale for axis
+            var yScale = d3.scaleLinear()
+                .domain([0,maxY])
+                .range([height,0]);
+            var xScale = d3.scaleLinear()
+                .domain([minX, maxX])
+                .range([0,width]);
+            
+            // vars to be used when building the chart
+            var yAxis = d3.axisLeft(yScale);
+            var xAxis = d3.axisBottom(xScale);
+            
+            // create a new svg in part three of the html
+            // using a different scaling technique than one used in class. 
+            // prefer the relative scale
+            var svg2 = d3.select("#partThree").append("svg").attr("height", "100%").attr("width", "100%");
+            
+            //padding for margins
+            var margin = {left:50, right:50, top:40, bottom:0};
+            
+            // add padding
+            var chartGroup = svg2.append("g")
+                        .attr("transform", "translate("+margin.left+","+margin.top+")");
+            
+            // get coordinates for line application
+            var line = d3.line()
+                    .x(function(d){ return xScale(d.x); })
+                    .y(function(d){ return yScale(d.y); });
+            
+            // use path to create line and format so it is a line not a shaded region
+            chartGroup.append("path").attr("fill","none").attr("stroke","blue").attr("d",line(data));
+            // transform the axis so it is below the graph (0,0 is the upper left corner in HTML so have to adjust)
+            chartGroup.append("g").attr("class","x axis").attr("transform","translate(0,"+height+")").call(xAxis);
+            chartGroup.append("g").attr("class","y axis").call(yAxis);
+    
+            // add x and y axis labels
+            chartGroup.append("text")
+                    .attr("class", "label")
+                    .text(xVal)
+                    .attr("x", width - 20)
+                    .attr("y", height - 10);
+
+            chartGroup.append("text")
+                   .attr("class", "label")
+                    .text(yVal)
+                    .attr("y",  - 10)
+                    .attr("transform","rotate(90)")
+                    .style("text-anchor", "start");
+
+        })
+    
+        // 4: add interaction to scatter plot
+        // adding mouseover interaction
+        // code adapted from http://bl.ocks.org/WilliamQLiu/76ae20060e19bf42d774
+        
+        svg1.append("g")
+            .on("mouseover", handleMouseOver)
+            .on("mouseout", handleMouseOut);
+        
+        function handleMouseOver(d, i) { 
+           // Use D3 to select element, change color and size
+                d3.select(this).attr({
+                  fill: "orange"
+                });
+            }
+        
+        function handleMouseOut(d, i) {
+            // Use D3 to select element, change color back to normal
+            d3.select(this).attr({
+              fill: "lightblue",
+              r: radius
+            });
+          }
+        
+        
+        // Put your part five code here ***********************
+
+    </script>
+</body>
+
+
+</html>
